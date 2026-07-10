@@ -1,0 +1,20 @@
+# Hot Wheels Scout — user-editable configuration.
+# Secrets (tokens, chat IDs) NEVER go in this file; they live in
+# GitHub Actions secrets (cloud) or .secrets/ (local, gitignored).
+
+brands:                # brand allow-list — a product must match one of these to survive filtering
+  - "hot wheels"
+
+wishlist:              # self-maintained (Instamart MCP has no wishlist tool) — keywords matched against product titles
+  - "hot wheels '67 camaro"
+  - "hot wheels nissan skyline gtr"
+
+# Informational only — the actual cadence is the cron line in
+# .github/workflows/scout.yml. Keep the two in sync.
+poll_interval_min: 5
+
+# D2 (confirmed 10 Jul 2026): auto-add everything.
+auto_add_wishlist: true        # wishlist restocks -> cart
+auto_add_new_arrivals: true    # new arrivals -> cart
+
+max_search_pages: 3            # pagination depth per brand keyword per cycle
