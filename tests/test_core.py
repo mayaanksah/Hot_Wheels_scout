@@ -43,6 +43,20 @@ class TestNormalization(unittest.TestCase):
         self.assertTrue(p["in_stock"])
         self.assertEqual(p["price"], 259)
 
+    def test_real_shape_captures_spin_id_and_nested_price(self):
+        # mirrors live recon_output/search_raw.json structure (13 Jul 2026)
+        raw = {"productId": "WZKU25NPNK", "displayName": "HW Datsun 240Z",
+               "brand": "Hot Wheels", "inStock": True,
+               "variations": [{"spinId": "A3EX75TUFS", "skuId": "ICK7Z4J43J",
+                               "price": {"mrp": 167, "offerPrice": 159},
+                               "isInStockAndAvailable": True}]}
+        p = normalize_product(raw)
+        self.assertEqual(p["id"], "WZKU25NPNK")
+        self.assertEqual(p["spin_id"], "A3EX75TUFS")
+        self.assertEqual(p["sku_id"], "ICK7Z4J43J")
+        self.assertEqual(p["price"], 159)
+        self.assertTrue(p["in_stock"])
+
     def test_all_variants_out_of_stock(self):
         raw = {"id": "a2", "name": "Hot Wheels RX-7",
                "variations": [{"price": 249, "in_stock": False}]}
@@ -150,15 +164,28 @@ class TestNoCheckoutAnywhere(unittest.TestCase):
         for forbidden in ("checkout", "place_order", "order"):
             self.assertNotIn(forbidden, TOOL_ALLOWLIST)
 
-    def test_cart_line_uses_template_keys(self):
-        from scout.cart import build_cart_line
-        line = build_cart_line(product("7", "HW"), {"itemId": "5", "qty": 2})
-        self.assertEqual(line, {"itemId": "7", "qty": 1})
+    def test_existing_cart_reduced_to_spin_sku_quantity(self):
+        from scout.cart import _existing_to_update_items
+        existing = [{"spinId": "S1", "skuId": "K1", "quantity": 2},
+                    {"spinId": "S2", "skuId": "K2", "quantity": 1}]
+        self.assertEqual(
+            _existing_to_update_items(existing),
+            [{"spinId": "S1", "skuId": "K1", "quantity": 2},
+             {"spinId": "S2", "skuId": "K2", "quantity": 1}])
 
-    def test_cart_line_default_keys(self):
-        from scout.cart import build_cart_line
-        self.assertEqual(build_cart_line(product("7", "HW"), None),
-                         {"product_id": "7", "quantity": 1})
+    def test_existing_cart_line_missing_ids_skips(self):
+        from scout.cart import CartSkipped, _existing_to_update_items
+        with self.assertRaises(CartSkipped):
+            _existing_to_update_items([{"name": "mystery", "quantity": 1}])
+        with self.assertRaises(CartSkipped):  # spinId alone is not enough
+            _existing_to_update_items([{"spinId": "S1", "quantity": 1}])
+
+    def test_empty_cart_error_recognized(self):
+        from scout.cart import ToolCallError, _is_empty_cart_error
+        err = ToolCallError("get_cart failed: Cart not found or session expired. "
+                            "Please add items to your cart again using update_cart.")
+        self.assertTrue(_is_empty_cart_error(err))
+        self.assertFalse(_is_empty_cart_error(ToolCallError("get_cart failed: 500 boom")))
 
 
 if __name__ == "__main__":

@@ -71,11 +71,16 @@ class InstamartClient:
                 raise AuthExpiredError(str(exc)) from exc
             raise
         if getattr(result, "isError", False):
-            payload = _result_payload(result)
-            message = payload if isinstance(payload, str) else json.dumps(payload)
-            if any(m in message.lower() for m in _AUTH_ERROR_MARKERS):
-                raise AuthExpiredError(message)
-            raise ToolCallError(f"{tool} failed: {message[:500]}")
+            # On errors Swiggy puts the human-readable reason in the text
+            # content while structuredContent is often an empty {}, so prefer
+            # the text here (the opposite of the success path).
+            text = "\n".join(c.text for c in result.content if getattr(c, "text", None))
+            if not text:
+                payload = _result_payload(result)
+                text = payload if isinstance(payload, str) else json.dumps(payload)
+            if any(m in text.lower() for m in _AUTH_ERROR_MARKERS):
+                raise AuthExpiredError(text)
+            raise ToolCallError(f"{tool} failed: {text[:500]}")
         return _result_payload(result)
 
 

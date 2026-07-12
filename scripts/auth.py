@@ -23,50 +23,20 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
 
-RESOURCE_URL = "https://mcp.swiggy.com/im"
-REDIRECT_PORT = 8976  # localhost redirects are whitelisted by Swiggy's manifest
+API_BASE = "https://mcp.swiggy.com"
+AUTHORIZE_ENDPOINT = f"{API_BASE}/auth/authorize"
+TOKEN_ENDPOINT = f"{API_BASE}/auth/token"
+REGISTER_ENDPOINT = f"{API_BASE}/auth/register"
+SCOPE = "mcp:tools mcp:resources mcp:prompts"
+REDIRECT_PORT = 8976  # http://localhost is allowed for local dev per Swiggy's docs
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}/callback"
 TOKEN_PATH = Path(__file__).resolve().parents[1] / ".secrets" / "token.json"
 
 
-def discover_auth_server(http: httpx.Client) -> dict:
-    """RFC 9728 protected-resource metadata -> RFC 8414 auth-server metadata."""
-    base = "https://mcp.swiggy.com"
-    resource_candidates = [
-        f"{base}/.well-known/oauth-protected-resource/im",
-        f"{RESOURCE_URL}/.well-known/oauth-protected-resource",
-        f"{base}/.well-known/oauth-protected-resource",
-    ]
-    auth_server = None
-    for url in resource_candidates:
-        response = http.get(url)
-        if response.status_code == 200:
-            servers = response.json().get("authorization_servers") or []
-            if servers:
-                auth_server = servers[0].rstrip("/")
-                break
-    if auth_server is None:
-        auth_server = base  # fall back to the MCP host itself
-
-    metadata_candidates = [
-        f"{auth_server}/.well-known/oauth-authorization-server",
-        f"{auth_server}/.well-known/openid-configuration",
-    ]
-    for url in metadata_candidates:
-        response = http.get(url)
-        if response.status_code == 200:
-            return response.json()
-    sys.exit(f"Could not discover OAuth metadata from {auth_server}. "
-             "Check https://mcp.swiggy.com/builders docs for changes.")
-
-
-def register_client(http: httpx.Client, metadata: dict) -> str:
-    """RFC 7591 dynamic client registration (Swiggy has no static API keys)."""
-    registration_endpoint = metadata.get("registration_endpoint")
-    if not registration_endpoint:
-        sys.exit("Auth server offers no dynamic registration endpoint; "
-                 "a pre-registered client_id is required — check Swiggy docs.")
-    response = http.post(registration_endpoint, json={
+def register_client(http: httpx.Client) -> str:
+    """RFC 7591 dynamic client registration at POST /auth/register (documented
+    at mcp.swiggy.com/builders/docs/start/authenticate/ — no static API key)."""
+    response = http.post(REGISTER_ENDPOINT, json={
         "client_name": "hot-wheels-scout (personal)",
         "redirect_uris": [REDIRECT_URI],
         "grant_types": ["authorization_code"],
@@ -112,10 +82,9 @@ def wait_for_code() -> str:
 
 def main() -> None:
     with httpx.Client(timeout=30, follow_redirects=True) as http:
-        metadata = discover_auth_server(http)
-        client_id = register_client(http, metadata)
+        client_id = register_client(http)
 
-        verifier = base64.urlsafe_b64encode(secrets.token_bytes(48)).rstrip(b"=").decode()
+        verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b"=").decode()
         challenge = base64.urlsafe_b64encode(
             hashlib.sha256(verifier.encode()).digest()
         ).rstrip(b"=").decode()
@@ -127,24 +96,20 @@ def main() -> None:
             "code_challenge": challenge,
             "code_challenge_method": "S256",
             "state": secrets.token_urlsafe(16),
-            "resource": RESOURCE_URL,  # RFC 8707, required by the MCP auth spec
+            "scope": SCOPE,
         }
-        if metadata.get("scopes_supported"):
-            auth_params["scope"] = " ".join(metadata["scopes_supported"])
 
-        auth_url = f"{metadata['authorization_endpoint']}?{urlencode(auth_params)}"
-        print("Opening browser for Swiggy login...")
+        auth_url = f"{AUTHORIZE_ENDPOINT}?{urlencode(auth_params)}"
+        print("Opening browser for Swiggy login (phone + OTP)...")
         print(f"(If nothing opens, visit:\n{auth_url}\n)")
         webbrowser.open(auth_url)
 
         code = wait_for_code()
-        response = http.post(metadata["token_endpoint"], data={
+        response = http.post(TOKEN_ENDPOINT, json={
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": REDIRECT_URI,
-            "client_id": client_id,
             "code_verifier": verifier,
-            "resource": RESOURCE_URL,
         })
         response.raise_for_status()
         tokens = response.json()

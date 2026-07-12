@@ -4,3 +4,4 @@ __pycache__/
 .secrets/
 recon_output/
 .env
+scripts/_debug_*

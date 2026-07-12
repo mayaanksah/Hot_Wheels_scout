@@ -55,16 +55,17 @@ async def main() -> None:
 
         address_id = args.address_id
         if not address_id:
-            found = extract_products(addresses)  # generic list-finder works here too
-            if found:
-                for key in ("address_id", "addressId", "id"):
-                    if key in found[0]:
-                        address_id = str(found[0][key])
-                        break
+            entries = addresses.get("addresses", []) if isinstance(addresses, dict) else []
+            home = next((a for a in entries if a.get("addressCategory") == "Home"), None)
+            chosen = home or (entries[0] if entries else None)
+            if chosen:
+                address_id = str(chosen["id"])
+                print(f"\nAuto-picked address: {chosen.get('addressTag')} "
+                      f"({chosen.get('addressCategory')})")
         if not address_id:
             sys.exit("Could not auto-pick an addressId — rerun with --address-id "
                      "using the dump above.")
-        print(f"\nUsing addressId={address_id}  (set SWIGGY_ADDRESS_ID to this)")
+        print(f"Using addressId={address_id}  (set SWIGGY_ADDRESS_ID to this)")
 
         print(f"\n== search_products('{args.query}') ==")
         payload = await client.call(
@@ -85,8 +86,12 @@ async def main() -> None:
 
         if args.cart:
             print("\n== get_cart ==")
-            cart = await client.call("get_cart", {"addressId": address_id})
-            dump("cart_raw", cart)
+            try:
+                cart = await client.call("get_cart", {})  # takes no arguments
+                dump("cart_raw", cart)
+            except Exception as exc:
+                print(f"get_cart: {exc}")
+                print("(\"Cart not found\" simply means the cart is empty.)")
 
 
 if __name__ == "__main__":

@@ -12,13 +12,17 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
-ID_KEYS = ("product_id", "productId", "id", "item_id", "itemId", "spin", "sku")
-NAME_KEYS = ("display_name", "displayName", "name", "title", "product_name", "productName")
-BRAND_KEYS = ("brand", "brand_name", "brandName")
-PRICE_KEYS = ("offer_price", "offerPrice", "price", "selling_price", "sellingPrice",
+# Field names confirmed against live search_products recon, 13 Jul 2026.
+ID_KEYS = ("productId", "product_id", "id", "item_id", "itemId")
+SPIN_KEYS = ("spinId", "spin_id", "spin")  # variant-level id required by update_cart
+SKU_KEYS = ("skuId", "sku_id", "sku")      # update_cart requires skuId alongside spinId
+NAME_KEYS = ("displayName", "display_name", "name", "title", "product_name", "productName")
+BRAND_KEYS = ("brand", "brandName", "brand_name")
+PRICE_KEYS = ("offerPrice", "offer_price", "price", "sellingPrice", "selling_price",
               "final_price", "store_price", "mrp")
-IMAGE_KEYS = ("image_url", "imageUrl", "image", "images", "image_id", "imageId", "thumbnail")
-STOCK_TRUE_KEYS = ("in_stock", "inStock", "available", "is_available", "isAvailable")
+IMAGE_KEYS = ("imageUrl", "image_url", "image", "images", "imageId", "image_id", "thumbnail")
+STOCK_TRUE_KEYS = ("isInStockAndAvailable", "inStock", "in_stock", "isAvail",
+                   "available", "is_available", "isAvailable")
 STOCK_FALSE_KEYS = ("out_of_stock", "outOfStock", "sold_out", "soldOut")
 VARIANT_KEYS = ("variations", "variants")
 LIST_CONTAINER_KEYS = ("products", "items", "results", "data", "catalog", "content", "widgets")
@@ -121,8 +125,12 @@ def normalize_product(raw: dict) -> dict | None:
     else:
         in_stock = _extract_in_stock(merged)
 
+    spin_id = _first_key(merged, SPIN_KEYS)
+    sku_id = _first_key(merged, SKU_KEYS)
     return {
-        "id": str(product_id),
+        "id": str(product_id),                       # stable identity for diffing
+        "spin_id": str(spin_id) if spin_id else None,  # purchasable unit for update_cart
+        "sku_id": str(sku_id) if sku_id else None,     # required alongside spinId
         "title": str(name),
         "brand": str(_first_key(merged, BRAND_KEYS) or ""),
         "price": _extract_price(merged),
