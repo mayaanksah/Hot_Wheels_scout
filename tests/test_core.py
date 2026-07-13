@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from scout.diff import apply_run_to_state, find_new_arrivals, find_wishlist_restocks
+from scout.diff import update_address
 from scout.search import (
     extract_products,
     matches_brands,
@@ -92,52 +92,92 @@ class TestMatching(unittest.TestCase):
         self.assertIsNone(matches_wishlist(title, ["hot wheels nissan skyline gtr"]))
 
 
-class TestDiff(unittest.TestCase):
-    def test_new_arrival_is_unseen_id(self):
-        seen = {"1": {"in_stock": True}}
-        current = {"1": product("1", "HW Old"), "2": product("2", "HW New")}
-        arrivals = find_new_arrivals(current, seen)
-        self.assertEqual([p["id"] for p in arrivals], ["2"])
+class TestHysteresis(unittest.TestCase):
+    WISH = ["hot wheels a"]
 
-    def test_restock_requires_false_to_true_and_wishlist_match(self):
-        seen = {"1": {"in_stock": False, "alerted_instock": False},
-                "2": {"in_stock": False, "alerted_instock": False},
-                "3": {"in_stock": True}}
-        current = {"1": product("1", "Hot Wheels '67 Camaro"),
-                   "2": product("2", "Hot Wheels Random Car"),
-                   "3": product("3", "Hot Wheels '67 Camaro Special")}
-        restocks = find_wishlist_restocks(current, seen, ["hot wheels '67 camaro"])
-        # 1 restocked+wishlisted; 2 restocked but not wishlisted; 3 never left stock
-        self.assertEqual([p["id"] for p in restocks], ["1"])
+    def _cycle(self, seen, current, seeded=False):
+        return update_address(seen, current, self.WISH, "t", seeded=seeded)
 
-    def test_absence_from_good_search_marks_out_of_stock(self):
-        state = empty_state()
-        state["seen_products"] = {"9": {"in_stock": True, "alerted_instock": True}}
-        apply_run_to_state(state, {}, "2026-07-10T00:00:00Z", search_ok=True)
-        self.assertFalse(state["seen_products"]["9"]["in_stock"])
-        self.assertFalse(state["seen_products"]["9"]["alerted_instock"])
+    def test_new_arrival_needs_two_confirmations(self):
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        # cycle 1: seen once, not yet confirmed → no alert
+        self.assertEqual(self._cycle(seen, cur), [])
+        self.assertFalse(seen["1"]["in_stock"])
+        # cycle 2: second consecutive sighting → New arrival
+        hits = self._cycle(seen, cur)
+        self.assertEqual([(p["id"], k) for p, k in hits], [("1", "New arrival")])
+        self.assertTrue(seen["1"]["in_stock"])
 
-    def test_bad_search_flips_nothing(self):
-        state = empty_state()
-        state["seen_products"] = {"9": {"in_stock": True, "alerted_instock": True}}
-        apply_run_to_state(state, {}, "2026-07-10T00:00:00Z", search_ok=False)
-        self.assertTrue(state["seen_products"]["9"]["in_stock"])
+    def test_single_cycle_flicker_never_alerts(self):
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        self._cycle(seen, cur)          # sighting 1 (pending)
+        self._cycle(seen, {})           # gone before confirmation → streak resets
+        self.assertEqual(self._cycle(seen, cur), [])  # sighting 1 again, still pending
+        self.assertFalse(seen["1"]["in_stock"])
 
-    def test_idempotent_second_run(self):
-        state = empty_state()
-        current = {"1": product("1", "Hot Wheels A")}
-        apply_run_to_state(state, current, "t1", search_ok=True)
-        state["seen_products"]["1"]["alerted_instock"] = True
-        self.assertEqual(find_new_arrivals(current, state["seen_products"]), [])
-        self.assertEqual(
-            find_wishlist_restocks(current, state["seen_products"], ["hot wheels a"]), [])
+    def test_transient_absence_does_not_flip_out_of_stock(self):
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        self._cycle(seen, cur); self._cycle(seen, cur)   # confirmed in stock
+        seen["1"]["alerted_instock"] = True              # simulate emit success
+        self.assertTrue(seen["1"]["in_stock"])
+        # two missed cycles (< miss_threshold 3) — stays in stock, no re-alert
+        self._cycle(seen, {}); self._cycle(seen, {})
+        self.assertTrue(seen["1"]["in_stock"])
+        # reappears: already in stock and alerted → no duplicate alert
+        self.assertEqual(self._cycle(seen, cur), [])
+
+    def test_sustained_absence_confirms_out_then_restock_realerts(self):
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        self._cycle(seen, cur); self._cycle(seen, cur)   # in stock, alerted new arrival
+        seen["1"]["alerted_instock"] = True              # simulate emit success
+        for _ in range(3):                               # 3 misses → confirmed gone
+            self._cycle(seen, {})
+        self.assertFalse(seen["1"]["in_stock"])
+        # returns for 2 cycles → Restock (wishlisted), not New arrival
+        self._cycle(seen, cur)
+        hits = self._cycle(seen, cur)
+        self.assertEqual([(p["id"], k) for p, k in hits], [("1", "Restock")])
+
+    def test_non_wishlist_restock_tracked_not_alerted(self):
+        seen = {}
+        cur = {"9": product("9", "Hot Wheels Zzz")}      # not in WISH
+        self._cycle(seen, cur); h = self._cycle(seen, cur)
+        self.assertEqual([(p["id"], k) for p, k in h], [("9", "New arrival")])
+        seen["9"]["alerted_instock"] = True
+        for _ in range(3):
+            self._cycle(seen, {})
+        self._cycle(seen, cur)
+        self.assertEqual(self._cycle(seen, cur), [])     # non-wishlist re-stock: silent
+        self.assertTrue(seen["9"]["in_stock"])
+
+    def test_seed_sets_baseline_without_alerts(self):
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A"), "2": product("2", "HW B", in_stock=False)}
+        self.assertEqual(self._cycle(seen, cur, seeded=True), [])
+        self.assertTrue(seen["1"]["in_stock"] and seen["1"]["alerted_instock"])
+        self.assertFalse(seen["2"]["in_stock"])
+
+    def test_addresses_are_independent(self):
+        seen_a, seen_b = {}, {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        self._cycle(seen_a, cur); self._cycle(seen_a, cur)   # confirmed at A
+        self.assertTrue(seen_a["1"]["in_stock"])
+        self.assertNotIn("1", seen_b)                        # untouched at B
+        # B confirms independently on its own two cycles.
+        self._cycle(seen_b, cur)
+        hits = self._cycle(seen_b, cur)
+        self.assertEqual([(p["id"], k) for p, k in hits], [("1", "New arrival")])
 
 
 class TestState(unittest.TestCase):
     def test_missing_state_seeds(self):
         state, seeded = load_state(Path(tempfile.gettempdir()) / "does-not-exist-xyz.json")
         self.assertTrue(seeded)
-        self.assertEqual(state["seen_products"], {})
+        self.assertEqual(state["seen_by_address"], {})
 
     def test_corrupt_state_seeds(self):
         with tempfile.TemporaryDirectory() as d:
@@ -146,15 +186,26 @@ class TestState(unittest.TestCase):
             _, seeded = load_state(path)
             self.assertTrue(seeded)
 
+    def test_old_flat_schema_triggers_reseed(self):
+        # a v1 state.json (flat seen_products) must reseed, not crash.
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "state.json"
+            path.write_text(json.dumps(
+                {"last_run_utc": "t0", "seen_products": {"1": {"in_stock": True}}, "flags": {}}
+            ), encoding="utf-8")
+            state, seeded = load_state(path)
+            self.assertTrue(seeded)
+            self.assertEqual(state["seen_by_address"], {})
+
     def test_round_trip(self):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "state.json"
             state = empty_state()
-            state["seen_products"]["1"] = {"title": "HW", "in_stock": True}
+            state["seen_by_address"]["addrA"] = {"1": {"title": "HW", "in_stock": True}}
             save_state(path, state)
             loaded, seeded = load_state(path)
             self.assertFalse(seeded)
-            self.assertEqual(loaded["seen_products"]["1"]["title"], "HW")
+            self.assertEqual(loaded["seen_by_address"]["addrA"]["1"]["title"], "HW")
             self.assertIsNotNone(loaded["last_run_utc"])
 
 
@@ -206,6 +257,53 @@ class TestNoCheckoutAnywhere(unittest.TestCase):
             content=[types.SimpleNamespace(text=text)])
         self.assertEqual(_result_payload(result),
                          {"items": [{"spinId": "S1"}], "cartId": "c1"})
+
+
+class TestAddressSettings(unittest.TestCase):
+    def setUp(self):
+        import os
+        for k in ("SWIGGY_ADDRESS_IDS", "SWIGGY_ADDRESS_ID", "SWIGGY_CART_ADDRESS_ID"):
+            os.environ.pop(k, None)
+
+    def tearDown(self):
+        self.setUp()
+
+    def test_ids_parsed_and_ordered(self):
+        import os
+        from scout.settings import load_address_ids, load_cart_address_id
+        os.environ["SWIGGY_ADDRESS_IDS"] = " a1 , a2 ,a3 "
+        self.assertEqual(load_address_ids(), ["a1", "a2", "a3"])
+        self.assertEqual(load_cart_address_id(), "a1")  # defaults to first
+
+    def test_explicit_cart_address(self):
+        import os
+        from scout.settings import load_cart_address_id
+        os.environ["SWIGGY_ADDRESS_IDS"] = "a1,a2"
+        os.environ["SWIGGY_CART_ADDRESS_ID"] = "a2"
+        self.assertEqual(load_cart_address_id(), "a2")
+
+    def test_legacy_single_address_fallback(self):
+        import os
+        from scout.settings import load_address_ids, load_cart_address_id
+        os.environ["SWIGGY_ADDRESS_ID"] = "solo"
+        self.assertEqual(load_address_ids(), ["solo"])
+        self.assertEqual(load_cart_address_id(), "solo")
+
+
+class TestAlertFormat(unittest.TestCase):
+    def test_lists_addresses_and_cart_label(self):
+        from scout.alerts import format_alert
+        text = format_alert(product("1", "HW Skyline"), "Restock", True,
+                            address_labels=["Home", "Teesha"], cart_label="Home")
+        self.assertIn("In stock at: Home, Teesha", text)
+        self.assertIn("Added to cart (Home)", text)
+
+    def test_no_cart_line_when_not_added(self):
+        from scout.alerts import format_alert
+        text = format_alert(product("1", "HW Skyline"), "New arrival", False,
+                            address_labels=["Akshay"])
+        self.assertIn("In stock at: Akshay", text)
+        self.assertNotIn("Added to cart", text)
 
 
 if __name__ == "__main__":

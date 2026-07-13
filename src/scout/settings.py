@@ -20,6 +20,9 @@ DEFAULTS = {
     "auto_add_wishlist": True,
     "auto_add_new_arrivals": True,
     "max_search_pages": 3,
+    # Hysteresis to absorb Swiggy's noisy search (see diff.py).
+    "miss_threshold": 3,       # cycles absent before confirming out-of-stock
+    "confirm_threshold": 2,    # cycles present before confirming in-stock
 }
 
 
@@ -43,8 +46,27 @@ def load_swiggy_token() -> str | None:
     return None
 
 
-def load_address_id() -> str | None:
-    return os.environ.get("SWIGGY_ADDRESS_ID") or None
+def load_address_ids() -> list[str]:
+    """Monitored addresses, order preserved. Prefers SWIGGY_ADDRESS_IDS
+    (comma-separated); falls back to the single SWIGGY_ADDRESS_ID so a
+    mid-migration deploy keeps working."""
+    raw = os.environ.get("SWIGGY_ADDRESS_IDS")
+    if raw:
+        ids = [a.strip() for a in raw.split(",") if a.strip()]
+        if ids:
+            return ids
+    single = os.environ.get("SWIGGY_ADDRESS_ID")
+    return [single.strip()] if single else []
+
+
+def load_cart_address_id() -> str | None:
+    """The one address that receives auto-adds. Defaults to the first
+    monitored address when SWIGGY_CART_ADDRESS_ID is unset."""
+    explicit = os.environ.get("SWIGGY_CART_ADDRESS_ID")
+    if explicit:
+        return explicit.strip()
+    ids = load_address_ids()
+    return ids[0] if ids else None
 
 
 def load_telegram() -> tuple[str, str] | None:

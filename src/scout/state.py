@@ -14,17 +14,21 @@ def utc_now() -> str:
 
 
 def empty_state() -> dict:
-    return {"last_run_utc": None, "seen_products": {}, "flags": {}}
+    # seen_by_address: {address_id: {product_id: {...}}} — stock is per-store,
+    # so each monitored address gets its own slice (prevents cross-address
+    # flip-flop / false restock storms).
+    return {"last_run_utc": None, "seen_by_address": {}, "flags": {}}
 
 
 def load_state(path: Path) -> tuple[dict, bool]:
     """Returns (state, seeded). seeded=True means state was missing/corrupt
-    and this run must not alert."""
+    OR in the old flat single-address schema — in every case this run must
+    reseed silently (no alert storm), consistent with PRD §12."""
     if not path.exists():
         return empty_state(), True
     try:
         state = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(state, dict) or "seen_products" not in state:
+        if not isinstance(state, dict) or "seen_by_address" not in state:
             return empty_state(), True
         state.setdefault("flags", {})
         return state, False

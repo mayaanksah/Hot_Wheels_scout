@@ -87,9 +87,13 @@ async def add_to_cart(client, address_id: str, product: dict) -> None:
         # get_cart's live schema takes no arguments (the cart is session-scoped)
         cart_payload = await client.call("get_cart", {})
     except ToolCallError as exc:
-        if not _is_empty_cart_error(exc):
-            raise  # a real cart error — don't risk a blind replace-write
-        cart_payload = {"items": []}  # empty cart: safe to write the first item
+        if _is_empty_cart_error(exc):
+            cart_payload = {"items": []}  # empty cart: safe to write the first item
+        else:
+            # Any other get_cart failure (e.g. "An error occurred" when the cart
+            # holds now-out-of-stock lines) means we cannot read the cart to
+            # merge safely — skip the write to protect it (PRD invariant #2).
+            raise CartSkipped(f"get_cart failed, skipping to protect cart: {exc}") from exc
 
     existing = _extract_cart_items(cart_payload)
 

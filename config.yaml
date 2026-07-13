@@ -103,3 +103,11 @@ auto_add_wishlist: true        # wishlist restocks -> cart
 auto_add_new_arrivals: true    # new arrivals -> cart
 
 max_search_pages: 3            # pagination depth per brand keyword per cycle
+
+# Swiggy's search returns a drifting subset of products each call, so stock
+# state is de-noised: a car must be missing this many cycles before it counts
+# as "gone", and present this many before it counts as "in stock". Raising
+# miss_threshold = fewer phantom alerts but slower to notice a real sell-out;
+# raising confirm_threshold = slower to alert a real drop.
+miss_threshold: 3
+confirm_threshold: 2

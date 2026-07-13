@@ -71,9 +71,28 @@ lives in the repo — only config, code, and state.
    git push -u origin main
    ```
 2. Repo → Settings → Secrets and variables → Actions → add:
-   `SWIGGY_TOKEN`, `SWIGGY_ADDRESS_ID`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+   `SWIGGY_TOKEN`, `SWIGGY_ADDRESS_IDS`, `SWIGGY_CART_ADDRESS_ID`,
+   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 3. Actions tab → enable workflows → run **scout** once via *Run workflow*
    (this button is also your manual force-check during a hot drop).
+
+### Addresses (multi-store monitoring)
+
+Instamart stock is per-store, and each store is tied to a delivery address, so
+monitoring several addresses widens the net for catching a rare car.
+
+- `SWIGGY_ADDRESS_IDS` — comma-separated address ids to monitor, e.g.
+  `d8m0…,d6db…,d900…`. Get ids from `scripts/recon.py`. **Addresses live in
+  secrets, not `config.yaml`** (the repo is public; addresses are mildly
+  private).
+- `SWIGGY_CART_ADDRESS_ID` — the single address whose cart receives auto-adds
+  (you can only check out one order from one address). Defaults to the first id
+  in `SWIGGY_ADDRESS_IDS`. Cars in stock only at the *other* monitored
+  addresses still alert you — they're just not auto-added.
+- Legacy `SWIGGY_ADDRESS_ID` (single) is still read as a fallback.
+
+Changing the address set reshapes `state.json`, so the next run reseeds
+silently (no alerts that one cycle), then alerting resumes.
 
 ## Configuration
 
