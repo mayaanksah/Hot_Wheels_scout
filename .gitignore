@@ -5,3 +5,4 @@ __pycache__/
 recon_output/
 .env
 scripts/_debug_*
+Telegram bot details.md
