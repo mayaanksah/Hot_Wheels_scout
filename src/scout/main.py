@@ -154,11 +154,18 @@ async def run() -> int:
             cycle_hits: dict[str, dict] = {}
             now = utc_now()
 
+            # An address with no prior state (freshly added to the monitor set)
+            # must seed silently, exactly like a first install — otherwise its
+            # whole catalog would alert at once as "new arrivals" on its second
+            # cycle. Captured before the setdefault below populates the slice.
+            fresh_addresses = {aid for aid in address_ids if not seen_by_address.get(aid)}
+
             for address_id in address_ids:
                 seen = seen_by_address.setdefault(address_id, {})
+                seed_addr = seeded or address_id in fresh_addresses
                 current, any_results = await _search_address(client, config, address_id)
 
-                if not any_results and not seeded:
+                if not any_results and not seed_addr:
                     # Fully empty/failed response for THIS address: skip so we
                     # don't mass-increment misses toward false OOS (PRD §12).
                     # Per-product churn within a non-empty result is absorbed by
@@ -167,13 +174,18 @@ async def run() -> int:
                     continue
 
                 hits = update_address(
-                    seen, current, config["wishlist"], now, seeded=seeded,
+                    seen, current, config["wishlist"], now, seeded=seed_addr,
                     miss_threshold=config["miss_threshold"],
                     confirm_threshold=config["confirm_threshold"],
                 )
                 for product, kind in hits:
                     _record_hit(cycle_hits, product, kind,
                                 address_id, labels, seen, cart_address_id)
+
+            if fresh_addresses and not seeded:
+                log.info("silently seeded %d newly-added address(es): %s",
+                         len(fresh_addresses),
+                         ", ".join(labels[a] for a in fresh_addresses))
 
             if seeded:
                 save_state(STATE_PATH, state)
