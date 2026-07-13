@@ -45,14 +45,23 @@ def looks_like_auth_error(exc: BaseException) -> bool:
 def _result_payload(result):
     """Best-effort extraction: prefer structured content, then JSON text, then raw text."""
     structured = getattr(result, "structuredContent", None)
-    if structured is not None:
+    if structured:  # observed {} on some responses — treat as absent
         return structured
     texts = [c.text for c in result.content if getattr(c, "text", None)]
     joined = "\n".join(texts)
     try:
         return json.loads(joined)
     except (json.JSONDecodeError, ValueError):
-        return joined
+        pass
+    # Some tools (e.g. get_cart) prefix the JSON body with LLM display
+    # instructions ("...Data:\n{...}") — parse from the first brace.
+    brace = joined.find("{")
+    if brace >= 0:
+        try:
+            return json.loads(joined[brace:])
+        except (json.JSONDecodeError, ValueError):
+            pass
+    return joined
 
 
 class InstamartClient:

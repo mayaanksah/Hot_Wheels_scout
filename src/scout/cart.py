@@ -25,12 +25,13 @@ QUANTITY_KEYS = ("quantity", "qty", "count")
 # specific message as a genuinely empty cart (safe to write the first item).
 _EMPTY_CART_MARKERS = ("cart not found", "add items to your cart")
 
-# Observed live 13 Jul 2026 around midnight IST: when the dark store is
-# closed, update_cart rejects everything ("store is currently unavailable or
-# closed", and sometimes "No valid items in cart"). Not a bug in our payload —
-# treat as a skip so the alert still fires and the next cycle retries.
-_STORE_CLOSED_MARKERS = ("store is currently unavailable", "store is closed",
-                         "no valid items in cart")
+# Observed live 13 Jul 2026: update_cart rejections that are conditions of
+# the store/item, not bugs in our payload — closed dark store ("store is
+# currently unavailable or closed", "No valid items in cart" around midnight)
+# and items that went out of stock between search and cart-add. Treated as a
+# skip so the alert still fires and the next cycle retries.
+_ADD_REJECTED_MARKERS = ("store is currently unavailable", "store is closed",
+                         "no valid items in cart", "out of stock")
 
 
 class CartSkipped(RuntimeError):
@@ -110,6 +111,6 @@ async def add_to_cart(client, address_id: str, product: dict) -> None:
         )
     except ToolCallError as exc:
         text = str(exc).lower()
-        if any(marker in text for marker in _STORE_CLOSED_MARKERS):
+        if any(marker in text for marker in _ADD_REJECTED_MARKERS):
             raise CartSkipped(f"store closed / item rejected: {exc}") from exc
         raise

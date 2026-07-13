@@ -187,6 +187,26 @@ class TestNoCheckoutAnywhere(unittest.TestCase):
         self.assertTrue(_is_empty_cart_error(err))
         self.assertFalse(_is_empty_cart_error(ToolCallError("get_cart failed: 500 boom")))
 
+    def test_real_cart_line_shape_survives_merge(self):
+        # mirrors live get_cart items[] (13 Jul 2026)
+        from scout.cart import _existing_to_update_items
+        line = {"spinId": "8LTDGOK4ZH", "skuId": "X2FUSHLPWO", "productId": "UIL3IG7NBF",
+                "itemName": "HW CADILLAC CELESTIQ", "quantity": 1, "storeId": 1397057,
+                "isInStockAndAvailable": True, "mrp": 167, "discountedFinalPrice": 167}
+        self.assertEqual(_existing_to_update_items([line]),
+                         [{"spinId": "8LTDGOK4ZH", "skuId": "X2FUSHLPWO", "quantity": 1}])
+
+    def test_payload_json_after_preamble(self):
+        import types
+        from scout.mcp_client import _result_payload
+        text = ('Cart retrieved successfully. Please display the cart details...\n'
+                'Data:\n{"items": [{"spinId": "S1"}], "cartId": "c1"}')
+        result = types.SimpleNamespace(
+            structuredContent={},  # observed empty on live responses
+            content=[types.SimpleNamespace(text=text)])
+        self.assertEqual(_result_payload(result),
+                         {"items": [{"spinId": "S1"}], "cartId": "c1"})
+
 
 if __name__ == "__main__":
     unittest.main()
