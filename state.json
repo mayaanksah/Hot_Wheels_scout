@@ -1,188 +1,239 @@
 {
   "flags": {},
-  "last_run_utc": "2026-07-13T15:18:47Z",
-  "seen_products": {
-    "0LV1O1LSTR": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW SOLAR REFLEX Toy Car for Kids & Collectors"
-    },
-    "1WW48YNPR0": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 169,
-      "title": "Hot Wheels Worldwide Basic Car HW '41 WILLYS Toy Car for Kids & Collectors"
-    },
-    "3BMVQAJ3IO": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T09:37:50Z",
-      "price": 167,
-      "title": "Hot Wheels Worldwide Basic Car HW TOONED PURPLE PASSION Toy Car for Kids & Collectors"
-    },
-    "740GZAY5AO": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW VAIRSTRIKE Toy Car for Kids & Collectors"
-    },
-    "7PIB1K2UEY": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T09:37:50Z",
-      "price": 159,
-      "title": "Hot Wheels Worldwide Basic Car HW Rapid Pulse Toy Car For Kids & Collectors"
-    },
-    "960KMHTPQZ": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW 33' FORD LO BOY Toy Car for Kids & Collectors"
-    },
-    "9WL7C173QD": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 1969,
-      "title": "Hot Wheels Spinning Sound Crane Vehicle Play Set Non Toxic (Multicolor)"
-    },
-    "D82SZPVAD3": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW BONE SHAKER Toy Car for Kids & Collectors"
-    },
-    "DRTALP9PVI": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW CUSTOM / PERSONNALIS 72 CHEVY LUV Toy Car for Kids & Collectors"
-    },
-    "F53LK28SOU": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T09:37:50Z",
-      "price": 166,
-      "title": "Hot Wheels Worldwide Basic Car HW QUICK CHAT Toy Car for Kids & Collectors"
-    },
-    "HE4EEXAOH5": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 169,
-      "title": "Hot Wheels Worldwide Basic Car HW FIAT BEAST OF TURIN Toy Car for Kids & Collectors"
-    },
-    "HIDUS0CT0U": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 1819,
-      "title": "Hot Wheels Mega Hauler Truck Includes 4 DieCast Cars"
-    },
-    "JTE6GL0Q13": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T09:37:50Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW BARBIE DREAM CAMPER / ROULOTTE Toy Car for Kids & Collectors"
-    },
-    "MNGEAIN5KC": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 167,
-      "title": "Hot Wheels Worldwide Basic Car HW 8 CRATE Toy Car for Kids & Collectors"
-    },
-    "N7VNCWWBCS": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 159,
-      "title": "Hot Wheels Worldwide Basic Car HW Twin Dorado Toy Car For Kids & Collectors"
-    },
-    "OZE75BB7QP": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 169,
-      "title": "Hot Wheels Worldwide Basic Car HW FLIPPIN FAST Toy Car"
-    },
-    "QPJITKHXVG": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW CLASSIC/CLASSIQUE '55 NOMAD Toy Car for Kids & Collectors"
-    },
-    "UIL3IG7NBF": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T12:19:21Z",
-      "price": 167,
-      "title": "Hot Wheels Worldwide Basic Car HW CADILLAC CELESTIQ Toy Car for Kids & Collectors - JJH49"
-    },
-    "URA2FSBYQI": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 169,
-      "title": "Hot Wheels Worldwide Basic Car HW RD-06 Toy Car"
-    },
-    "V0HFG7POI8": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 167,
-      "title": "Hot Wheels Worldwide Basic Car HW TWIN TAGS Toy Car for Kids & Collectors - JJH64"
-    },
-    "VGTCPZT724": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW BULLET PROOF Toy Car for Kids & Collectors"
-    },
-    "WW07BA357T": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 849,
-      "title": "Hot Wheels 5 Car Scale Vehicles Non Toxic (Assorted Colour and Design)"
-    },
-    "YO1XO3EGWR": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 168,
-      "title": "Hot Wheels Worldwide Basic Car HW MID MILL Toy Car for Kids & Collectors"
-    },
-    "YTS3ETZSL0": {
-      "alerted_instock": false,
-      "in_stock": false,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 899,
-      "title": "Hot Wheels Mega Hauler Truck Non Toxic (Red, Black, Gray)"
-    },
-    "ZMN17L8V1C": {
-      "alerted_instock": true,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 159,
-      "title": "Hot Wheels Worldwide Basic Car HW Decidedly Go Toy Car For Kids & Collectors"
-    },
-    "ZYWZFFGQKK": {
-      "alerted_instock": false,
-      "in_stock": true,
-      "last_seen_utc": "2026-07-13T15:18:47Z",
-      "price": 169,
-      "title": "Hot Wheels Worldwide Basic Car HW X-STEAM Toy Car for Kids & Collectors"
+  "last_run_utc": "2026-07-13T17:26:40Z",
+  "seen_by_address": {
+    "d8m0m1s1d96vvut43a4g": {
+      "0LV1O1LSTR": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW SOLAR REFLEX Toy Car for Kids & Collectors"
+      },
+      "1WW48YNPR0": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 169,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW '41 WILLYS Toy Car for Kids & Collectors"
+      },
+      "740GZAY5AO": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW VAIRSTRIKE Toy Car for Kids & Collectors"
+      },
+      "960KMHTPQZ": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW 33' FORD LO BOY Toy Car for Kids & Collectors"
+      },
+      "9WL7C173QD": {
+        "alerted_instock": false,
+        "avail_streak": 0,
+        "in_stock": false,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 1,
+        "pending_kind": null,
+        "price": 1969,
+        "seen_instock_before": false,
+        "title": "Hot Wheels Spinning Sound Crane Vehicle Play Set Non Toxic (Multicolor)"
+      },
+      "D82SZPVAD3": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW BONE SHAKER Toy Car for Kids & Collectors"
+      },
+      "DRTALP9PVI": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW CUSTOM / PERSONNALIS 72 CHEVY LUV Toy Car for Kids & Collectors"
+      },
+      "HE4EEXAOH5": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 169,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW FIAT BEAST OF TURIN Toy Car for Kids & Collectors"
+      },
+      "HIDUS0CT0U": {
+        "alerted_instock": false,
+        "avail_streak": 0,
+        "in_stock": false,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 1,
+        "pending_kind": null,
+        "price": 1819,
+        "seen_instock_before": false,
+        "title": "Hot Wheels Mega Hauler Truck Includes 4 DieCast Cars"
+      },
+      "MNGEAIN5KC": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 167,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW 8 CRATE Toy Car for Kids & Collectors"
+      },
+      "N7VNCWWBCS": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 159,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW Twin Dorado Toy Car For Kids & Collectors"
+      },
+      "OZE75BB7QP": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 169,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW FLIPPIN FAST Toy Car"
+      },
+      "QPJITKHXVG": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW CLASSIC/CLASSIQUE '55 NOMAD Toy Car for Kids & Collectors"
+      },
+      "URA2FSBYQI": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 169,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW RD-06 Toy Car"
+      },
+      "V0HFG7POI8": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 167,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW TWIN TAGS Toy Car for Kids & Collectors - JJH64"
+      },
+      "VGTCPZT724": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW BULLET PROOF Toy Car for Kids & Collectors"
+      },
+      "WW07BA357T": {
+        "alerted_instock": false,
+        "avail_streak": 0,
+        "in_stock": false,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 1,
+        "pending_kind": null,
+        "price": 849,
+        "seen_instock_before": false,
+        "title": "Hot Wheels 5 Car Scale Vehicles Non Toxic (Assorted Colour and Design)"
+      },
+      "YO1XO3EGWR": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 168,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW MID MILL Toy Car for Kids & Collectors"
+      },
+      "YTS3ETZSL0": {
+        "alerted_instock": false,
+        "avail_streak": 0,
+        "in_stock": false,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 1,
+        "pending_kind": null,
+        "price": 899,
+        "seen_instock_before": false,
+        "title": "Hot Wheels Mega Hauler Truck Non Toxic (Red, Black, Gray)"
+      },
+      "ZMN17L8V1C": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 159,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW Decidedly Go Toy Car For Kids & Collectors"
+      },
+      "ZYWZFFGQKK": {
+        "alerted_instock": true,
+        "avail_streak": 1,
+        "in_stock": true,
+        "last_seen_utc": "2026-07-13T17:26:34Z",
+        "misses": 0,
+        "pending_kind": null,
+        "price": 169,
+        "seen_instock_before": true,
+        "title": "Hot Wheels Worldwide Basic Car HW X-STEAM Toy Car for Kids & Collectors"
+      }
     }
   }
 }
