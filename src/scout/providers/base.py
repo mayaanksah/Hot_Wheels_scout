@@ -12,6 +12,11 @@ class Provider:
     # MCP writes to an agent cart separate from the app cart, so an auto-add
     # would never appear in the app for checkout).
     supports_cart: bool = True
+    # Per-provider hysteresis override (None = use config defaults). Alert-only
+    # providers can confirm faster (fewer missed fast-selling cars) since there
+    # is no cart-write to protect from a false positive.
+    confirm_threshold: int | None = None
+    miss_threshold: int | None = None
 
     async def search(self, client, address_id: str, keyword: str, max_pages: int) -> list[dict]:
         """Return normalized products in stock/known at `address_id` for `keyword`."""

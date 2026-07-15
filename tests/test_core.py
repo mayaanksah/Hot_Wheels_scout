@@ -372,6 +372,20 @@ class TestZeptoProvider(unittest.TestCase):
         self.assertFalse(PROVIDERS["zepto"].supports_cart)  # agent cart != app cart
         self.assertTrue(PROVIDERS["swiggy"].supports_cart)
 
+    def test_zepto_confirms_on_first_sighting(self):
+        # alert-only Zepto confirms fast (1); Swiggy keeps the config default.
+        from scout.providers import PROVIDERS
+        self.assertEqual(PROVIDERS["zepto"].confirm_threshold, 1)
+        self.assertIsNone(PROVIDERS["swiggy"].confirm_threshold)
+
+    def test_confirm_threshold_one_alerts_immediately(self):
+        # with confirm_threshold=1, one sighting confirms a new arrival.
+        seen = {}
+        cur = {"1": product("1", "Hot Wheels A")}
+        hits = update_address(seen, cur, ["hot wheels a"], "t", seeded=False,
+                              confirm_threshold=1)
+        self.assertEqual([(p["id"], k) for p, k in hits], [("1", "New arrival")])
+
 
 if __name__ == "__main__":
     unittest.main()

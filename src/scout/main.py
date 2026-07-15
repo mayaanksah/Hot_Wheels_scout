@@ -134,8 +134,8 @@ async def _run_provider(provider, config, telegram, seen_by_provider, seeded, fl
 
                 hits = update_address(
                     seen, current, config["wishlist"], now, seeded=seed_addr,
-                    miss_threshold=config["miss_threshold"],
-                    confirm_threshold=config["confirm_threshold"],
+                    miss_threshold=provider.miss_threshold or config["miss_threshold"],
+                    confirm_threshold=provider.confirm_threshold or config["confirm_threshold"],
                 )
                 for prod, kind in hits:
                     _record_hit(cycle_hits, prod, kind, address_id, labels, seen, cart_address_id)

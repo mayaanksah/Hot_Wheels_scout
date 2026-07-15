@@ -29,6 +29,11 @@ class ZeptoProvider(Provider):
     # even account-tied and store-matched), and we never checkout, so an
     # auto-add can't help Maya. Alert with a link; she adds in-app herself.
     supports_cart = False
+    # Alert on the FIRST sighting. GitHub's scheduler runs ~hourly (throttled),
+    # so requiring 2 consecutive polls can miss a car that sells out between
+    # runs (observed 15 Jul 2026: "HW 17 Audi" seen once, sold out before the
+    # next poll). No cart-write here, so a rare false positive is cheap.
+    confirm_threshold = 1
     # Read + cart only. Excludes zepto_shop (intent buy!), create_order,
     # create_online_payment_order, create_wallet_order,
     # create_upi_reserve_pay_order, check_payment_status, get_payment_methods,
