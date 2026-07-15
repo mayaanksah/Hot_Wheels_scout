@@ -367,6 +367,11 @@ class TestZeptoProvider(unittest.TestCase):
         cart = {"cartItems": [{"productVariantId": "A"}, {"productVariantId": "B"}]}
         self.assertEqual(z._cart_pvids(cart), {"A", "B"})
 
+    def test_zepto_is_alert_only_swiggy_is_not(self):
+        from scout.providers import PROVIDERS
+        self.assertFalse(PROVIDERS["zepto"].supports_cart)  # agent cart != app cart
+        self.assertTrue(PROVIDERS["swiggy"].supports_cart)
+
 
 if __name__ == "__main__":
     unittest.main()

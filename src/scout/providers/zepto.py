@@ -24,6 +24,11 @@ class ZeptoProvider(Provider):
     name = "zepto"
     label = "Zepto"
     mcp_url = "https://mcp.zepto.co.in/mcp"
+    # Alert-only: Zepto's MCP cart is a separate "agent cart" from the app cart
+    # (verified live 14 Jul 2026 — item added via MCP never appears in the app,
+    # even account-tied and store-matched), and we never checkout, so an
+    # auto-add can't help Maya. Alert with a link; she adds in-app herself.
+    supports_cart = False
     # Read + cart only. Excludes zepto_shop (intent buy!), create_order,
     # create_online_payment_order, create_wallet_order,
     # create_upi_reserve_pay_order, check_payment_status, get_payment_methods,

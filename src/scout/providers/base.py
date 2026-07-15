@@ -8,6 +8,10 @@ class Provider:
     label: str = ""                # human app name for alerts, e.g. "Instamart"
     mcp_url: str = ""
     tool_allowlist: frozenset[str] = frozenset()  # search/address/cart tools ONLY
+    # Whether auto-add-to-cart is user-useful. False = alert-only (e.g. Zepto's
+    # MCP writes to an agent cart separate from the app cart, so an auto-add
+    # would never appear in the app for checkout).
+    supports_cart: bool = True
 
     async def search(self, client, address_id: str, keyword: str, max_pages: int) -> list[dict]:
         """Return normalized products in stock/known at `address_id` for `keyword`."""

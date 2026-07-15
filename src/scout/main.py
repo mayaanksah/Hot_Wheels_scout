@@ -73,7 +73,7 @@ async def _emit_hit(provider, client, telegram, config, cart_address_id, labels,
     is_wishlisted = matches_wishlist(product["title"], config["wishlist"])
     want_add = config["auto_add_new_arrivals"] or (is_wishlisted and config["auto_add_wishlist"])
     added = False
-    if want_add and hit["at_cart_addr"]:
+    if want_add and hit["at_cart_addr"] and provider.supports_cart:
         try:
             await provider.add_to_cart(client, cart_address_id, product)
             added = True
