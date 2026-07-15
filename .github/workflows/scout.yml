@@ -29,12 +29,16 @@ jobs:
       - name: Run scout cycle
         env:
           PYTHONPATH: src
+          # Monitored addresses are comma-separated (cart address first). A
+          # provider is active only when it has both a token and addresses, so
+          # Zepto stays dormant until its secrets are set.
           SWIGGY_TOKEN: ${{ secrets.SWIGGY_TOKEN }}
-          # Monitored addresses (comma-separated, cart address first). The old
-          # single SWIGGY_ADDRESS_ID is still read as a fallback.
           SWIGGY_ADDRESS_IDS: ${{ secrets.SWIGGY_ADDRESS_IDS }}
           SWIGGY_CART_ADDRESS_ID: ${{ secrets.SWIGGY_CART_ADDRESS_ID }}
           SWIGGY_ADDRESS_ID: ${{ secrets.SWIGGY_ADDRESS_ID }}
+          ZEPTO_TOKEN: ${{ secrets.ZEPTO_TOKEN }}
+          ZEPTO_ADDRESS_IDS: ${{ secrets.ZEPTO_ADDRESS_IDS }}
+          ZEPTO_CART_ADDRESS_ID: ${{ secrets.ZEPTO_CART_ADDRESS_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m scout.main

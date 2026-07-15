@@ -177,7 +177,7 @@ class TestState(unittest.TestCase):
     def test_missing_state_seeds(self):
         state, seeded = load_state(Path(tempfile.gettempdir()) / "does-not-exist-xyz.json")
         self.assertTrue(seeded)
-        self.assertEqual(state["seen_by_address"], {})
+        self.assertEqual(state["seen_by_provider"], {})
 
     def test_corrupt_state_seeds(self):
         with tempfile.TemporaryDirectory() as d:
@@ -186,7 +186,7 @@ class TestState(unittest.TestCase):
             _, seeded = load_state(path)
             self.assertTrue(seeded)
 
-    def test_old_flat_schema_triggers_reseed(self):
+    def test_v1_flat_schema_triggers_reseed(self):
         # a v1 state.json (flat seen_products) must reseed, not crash.
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "state.json"
@@ -195,25 +195,52 @@ class TestState(unittest.TestCase):
             ), encoding="utf-8")
             state, seeded = load_state(path)
             self.assertTrue(seeded)
-            self.assertEqual(state["seen_by_address"], {})
+            self.assertEqual(state["seen_by_provider"], {})
+
+    def test_v2_address_schema_migrates_to_swiggy_without_reseed(self):
+        # the live single-provider state (seen_by_address) migrates in place
+        # under "swiggy" and does NOT reseed (no Swiggy alert gap).
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "state.json"
+            path.write_text(json.dumps({
+                "last_run_utc": "t0", "flags": {},
+                "seen_by_address": {"addrA": {"1": {"in_stock": True, "alerted_instock": True}}},
+            }), encoding="utf-8")
+            state, seeded = load_state(path)
+            self.assertFalse(seeded)
+            self.assertNotIn("seen_by_address", state)
+            self.assertEqual(state["seen_by_provider"]["swiggy"]["addrA"]["1"]["in_stock"], True)
 
     def test_round_trip(self):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "state.json"
             state = empty_state()
-            state["seen_by_address"]["addrA"] = {"1": {"title": "HW", "in_stock": True}}
+            state["seen_by_provider"]["swiggy"] = {"addrA": {"1": {"title": "HW", "in_stock": True}}}
             save_state(path, state)
             loaded, seeded = load_state(path)
             self.assertFalse(seeded)
-            self.assertEqual(loaded["seen_by_address"]["addrA"]["1"]["title"], "HW")
+            self.assertEqual(loaded["seen_by_provider"]["swiggy"]["addrA"]["1"]["title"], "HW")
             self.assertIsNotNone(loaded["last_run_utc"])
 
 
 class TestNoCheckoutAnywhere(unittest.TestCase):
-    def test_checkout_not_in_allowlist(self):
-        from scout.mcp_client import TOOL_ALLOWLIST
-        for forbidden in ("checkout", "place_order", "order"):
-            self.assertNotIn(forbidden, TOOL_ALLOWLIST)
+    def test_no_provider_allowlists_order_or_payment_tools(self):
+        from scout.providers import PROVIDERS
+        # exact live tool names that place orders or move money, per provider
+        forbidden = {
+            "checkout", "confirm_order", "get_orders", "track_order",
+            "get_payment_options", "check_payment_status",
+            "zepto_shop", "create_order", "create_online_payment_order",
+            "create_wallet_order", "create_upi_reserve_pay_order",
+            "get_payment_methods", "add_saved_address",
+        }
+        for p in PROVIDERS.values():
+            self.assertTrue(p.tool_allowlist.isdisjoint(forbidden),
+                            f"{p.name} allowlist leaks an order/payment tool")
+            # sanity: every allowlisted name is a read/address/cart verb
+            for tool in p.tool_allowlist:
+                self.assertFalse(any(v in tool for v in ("order", "pay", "checkout", "shop")),
+                                 f"{p.name} allowlists suspicious tool {tool}")
 
     def test_existing_cart_reduced_to_spin_sku_quantity(self):
         from scout.cart import _existing_to_update_items
@@ -260,50 +287,85 @@ class TestNoCheckoutAnywhere(unittest.TestCase):
 
 
 class TestAddressSettings(unittest.TestCase):
+    ENV = ("SWIGGY_ADDRESS_IDS", "SWIGGY_ADDRESS_ID", "SWIGGY_CART_ADDRESS_ID",
+           "ZEPTO_ADDRESS_IDS", "ZEPTO_CART_ADDRESS_ID")
+
     def setUp(self):
         import os
-        for k in ("SWIGGY_ADDRESS_IDS", "SWIGGY_ADDRESS_ID", "SWIGGY_CART_ADDRESS_ID"):
+        for k in self.ENV:
             os.environ.pop(k, None)
 
     def tearDown(self):
         self.setUp()
 
-    def test_ids_parsed_and_ordered(self):
+    def test_ids_parsed_and_ordered_per_provider(self):
         import os
         from scout.settings import load_address_ids, load_cart_address_id
         os.environ["SWIGGY_ADDRESS_IDS"] = " a1 , a2 ,a3 "
-        self.assertEqual(load_address_ids(), ["a1", "a2", "a3"])
-        self.assertEqual(load_cart_address_id(), "a1")  # defaults to first
+        self.assertEqual(load_address_ids("swiggy"), ["a1", "a2", "a3"])
+        self.assertEqual(load_cart_address_id("swiggy"), "a1")   # defaults to first
+        self.assertEqual(load_address_ids("zepto"), [])          # independent per provider
 
     def test_explicit_cart_address(self):
         import os
         from scout.settings import load_cart_address_id
-        os.environ["SWIGGY_ADDRESS_IDS"] = "a1,a2"
-        os.environ["SWIGGY_CART_ADDRESS_ID"] = "a2"
-        self.assertEqual(load_cart_address_id(), "a2")
+        os.environ["ZEPTO_ADDRESS_IDS"] = "z1,z2"
+        os.environ["ZEPTO_CART_ADDRESS_ID"] = "z2"
+        self.assertEqual(load_cart_address_id("zepto"), "z2")
 
     def test_legacy_single_address_fallback(self):
         import os
         from scout.settings import load_address_ids, load_cart_address_id
         os.environ["SWIGGY_ADDRESS_ID"] = "solo"
-        self.assertEqual(load_address_ids(), ["solo"])
-        self.assertEqual(load_cart_address_id(), "solo")
+        self.assertEqual(load_address_ids("swiggy"), ["solo"])
+        self.assertEqual(load_cart_address_id("swiggy"), "solo")
 
 
 class TestAlertFormat(unittest.TestCase):
     def test_lists_addresses_and_cart_label(self):
         from scout.alerts import format_alert
         text = format_alert(product("1", "HW Skyline"), "Restock", True,
-                            address_labels=["Home", "Teesha"], cart_label="Home")
-        self.assertIn("In stock at: Home, Teesha", text)
-        self.assertIn("Added to cart (Home)", text)
+                            app="Zepto", link="https://z/x",
+                            address_labels=["home", "work"], cart_label="home")
+        self.assertIn("Hot Wheels (Zepto)", text)
+        self.assertIn("In stock at: home, work", text)
+        self.assertIn("Added to cart (home)", text)
+        self.assertIn("Open in Zepto", text)
 
     def test_no_cart_line_when_not_added(self):
         from scout.alerts import format_alert
         text = format_alert(product("1", "HW Skyline"), "New arrival", False,
+                            app="Instamart", link="https://s/x",
                             address_labels=["Akshay"])
         self.assertIn("In stock at: Akshay", text)
         self.assertNotIn("Added to cart", text)
+
+
+class TestZeptoProvider(unittest.TestCase):
+    def _zepto(self):
+        from scout.providers import PROVIDERS
+        return PROVIDERS["zepto"]
+
+    def test_normalize_paise_and_ids(self):
+        raw = {"productVariantId": "PV1", "storeProductId": "SP1",
+               "name": "Hot Wheels HW Gone Mad", "price": 16700, "mrp": 19900,
+               "imageUrl": "https://cdn.zeptonow.com/x.jpg", "availableQuantity": 1}
+        p = self._zepto()._normalize(raw)
+        self.assertEqual(p["id"], "PV1")
+        self.assertEqual(p["spin_id"], "PV1")     # cart productVariantId
+        self.assertEqual(p["sku_id"], "SP1")      # cart storeProductId
+        self.assertEqual(p["price"], 167.0)       # paise -> rupees
+        self.assertTrue(p["in_stock"])
+
+    def test_normalize_out_of_stock_when_zero_qty(self):
+        raw = {"productVariantId": "PV2", "storeProductId": "SP2",
+               "name": "Hot Wheels X", "price": 16700, "availableQuantity": 0}
+        self.assertFalse(self._zepto()._normalize(raw)["in_stock"])
+
+    def test_cart_pvids_extraction(self):
+        z = self._zepto()
+        cart = {"cartItems": [{"productVariantId": "A"}, {"productVariantId": "B"}]}
+        self.assertEqual(z._cart_pvids(cart), {"A", "B"})
 
 
 if __name__ == "__main__":

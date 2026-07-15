@@ -1,8 +1,9 @@
-"""Thin MCP client for the Swiggy Instamart server.
+"""Generic MCP client shared by all providers.
 
-Only allowlisted tools are callable. The server also exposes checkout /
-order tools (COD-only, non-cancellable); they are deliberately excluded —
-purchasing is outside this bot's hard ceiling (PRD §2, Appendix B).
+A session is opened against a provider's MCP URL with its bearer token, and
+every `call` is checked against that provider's allowlist. Order/checkout/
+payment tools are never in any provider's allowlist — purchasing is outside
+this bot's hard ceiling (PRD §2, Appendix B).
 """
 
 from __future__ import annotations
@@ -13,24 +14,15 @@ from contextlib import asynccontextmanager
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-INSTAMART_MCP_URL = "https://mcp.swiggy.com/im"
-
-TOOL_ALLOWLIST = frozenset({
-    "search_products",
-    "get_addresses",
-    "get_cart",
-    "update_cart",
-})
-
 _AUTH_ERROR_MARKERS = ("401", "-32001", "unauthorized", "unauthenticated")
 
 
 class ToolNotAllowedError(RuntimeError):
-    """Raised on any attempt to call a tool outside TOOL_ALLOWLIST."""
+    """Raised on any attempt to call a tool outside the provider allowlist."""
 
 
 class AuthExpiredError(RuntimeError):
-    """Swiggy access tokens live ~5 days with no refresh; re-auth is manual."""
+    """Access token expired/revoked; re-auth needed (Swiggy ~5-day no-refresh)."""
 
 
 class ToolCallError(RuntimeError):
@@ -53,7 +45,7 @@ def _result_payload(result):
         return json.loads(joined)
     except (json.JSONDecodeError, ValueError):
         pass
-    # Some tools (e.g. get_cart) prefix the JSON body with LLM display
+    # Some tools (e.g. Swiggy get_cart) prefix the JSON body with LLM display
     # instructions ("...Data:\n{...}") — parse from the first brace.
     brace = joined.find("{")
     if brace >= 0:
@@ -64,12 +56,15 @@ def _result_payload(result):
     return joined
 
 
-class InstamartClient:
-    def __init__(self, session: ClientSession):
+class Client:
+    """MCP session wrapper that enforces a per-provider tool allowlist."""
+
+    def __init__(self, session: ClientSession, allowlist: frozenset[str]):
         self._session = session
+        self._allowlist = allowlist
 
     async def call(self, tool: str, arguments: dict):
-        if tool not in TOOL_ALLOWLIST:
+        if tool not in self._allowlist:
             raise ToolNotAllowedError(
                 f"Tool '{tool}' is not allowlisted. This bot never places orders."
             )
@@ -80,9 +75,9 @@ class InstamartClient:
                 raise AuthExpiredError(str(exc)) from exc
             raise
         if getattr(result, "isError", False):
-            # On errors Swiggy puts the human-readable reason in the text
-            # content while structuredContent is often an empty {}, so prefer
-            # the text here (the opposite of the success path).
+            # On errors the human-readable reason is in the text content while
+            # structuredContent is often an empty {}, so prefer the text here
+            # (the opposite of the success path).
             text = "\n".join(c.text for c in result.content if getattr(c, "text", None))
             if not text:
                 payload = _result_payload(result)
@@ -94,13 +89,13 @@ class InstamartClient:
 
 
 @asynccontextmanager
-async def instamart_client(token: str):
+async def mcp_session(url: str, token: str, allowlist: frozenset[str]):
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        async with streamablehttp_client(INSTAMART_MCP_URL, headers=headers) as (read, write, _):
+        async with streamablehttp_client(url, headers=headers) as (read, write, _):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                yield InstamartClient(session)
+                yield Client(session, allowlist)
     except (AuthExpiredError, ToolNotAllowedError, ToolCallError):
         raise
     except Exception as exc:

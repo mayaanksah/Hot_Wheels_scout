@@ -76,6 +76,21 @@ lives in the repo — only config, code, and state.
 3. Actions tab → enable workflows → run **scout** once via *Run workflow*
    (this button is also your manual force-check during a hot drop).
 
+### Adding Zepto (second provider)
+
+The bot is multi-provider. Zepto (official MCP) is added the same way as Swiggy:
+
+1. `python scripts/auth.py zepto` — log in (mobile + OTP), saves
+   `.secrets/zepto_token.json`.
+2. `python scripts/recon.py zepto` — dumps Zepto's tools/addresses (read-only).
+3. Add GitHub secrets `ZEPTO_TOKEN`, `ZEPTO_ADDRESS_IDS` (comma-separated Zepto
+   address UUIDs from recon, cart address first), `ZEPTO_CART_ADDRESS_ID`.
+
+A provider is active only when it has **both** a token and addresses, so Zepto
+stays dormant until you set those. Each provider has its own ~5-day token ritual
+and its own "re-auth needed" alert. Alerts are labelled with the app
+(e.g. "New arrival — Hot Wheels (Zepto)").
+
 ### Addresses (multi-store monitoring)
 
 Instamart stock is per-store, and each store is tied to a delivery address, so
