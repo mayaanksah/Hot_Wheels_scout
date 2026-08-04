@@ -44,3 +44,20 @@ recon facts live at `~/.claude/plans/prd-spec-swirling-harbor.md`.
 `seen_by_provider[provider][address_id][product_id]`. Missing/corrupt = silent
 seed; a newly-added provider or address seeds silently (no first-run alert
 burst). Old `seen_by_address` migrates in place under `swiggy`.
+
+## Deliberately out of scope — don't re-research
+
+A retailer only becomes a provider if it has an **official** programmatic API.
+Scraping is rejected everywhere (fragile + ToS risk, PRD Appendix B).
+
+- **Blinkit, BigBasket** (checked 14 & 30 Jul 2026) — no official API; only
+  unofficial community MCPs ("not affiliated with…") and Apify scrapers.
+- **Amazon** (checked 30 Jul 2026) — PA-API 5.0 deprecated 15 May 2026 and
+  closed to new customers. Its replacement (Creators API) needs an Amazon
+  Associates account holding **10 qualifying sales per trailing 30 days**, or
+  access is revoked — untenable for a personal bot. Keepa's API works but is
+  €49/mo. **Resolution: Maya uses Keepa's free consumer trackers** (email +
+  phone push) for Amazon restocks, outside this bot.
+
+Revisit only if one of them ships an official API — the provider layer makes
+adding it straightforward.
